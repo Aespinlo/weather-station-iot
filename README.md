@@ -58,7 +58,7 @@ The design is **modular and decoupled**: each stage of the pipeline (transport, 
 - 🔐 **HTTPS remote access through Cloudflare Tunnel** and a custom domain (`bsx.es`), with no router ports opened
 
 <p align="center">
-  <img src="docs/img/architecture.png" alt="Architecture Diagram" width="700">
+  <img src="architecture.png" alt="Architecture Diagram" width="700">
 </p>
 
 ---
