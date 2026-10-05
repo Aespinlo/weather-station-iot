@@ -106,7 +106,8 @@ Central node of the system (4 GB RAM, Ubuntu Server). It hosts the broker, the p
 
 Lightweight publish/subscribe messaging. It handles incoming **JSON payloads with abbreviated sensor metrics** (`t`, `h`, `pn`, `v`, `a`, `pl`, `r`), which keeps messages small. See [Payload Format](#-payload-format).
 
-<!-- TODO: topic structure, QoS level, authentication/ACL if used -->
+* **Topic structure:** Messages are published under `/teleco/#` (specifically tested with `/teleco/estacion1`), allowing a scalable, hierarchical routing model for multiple stations.
+* **Authentication:** Basic username and password validation configured on the broker to restrict unauthorized publishers.****
 
 ### 🐍 Processing service: `mqtt_listener.py`
 
@@ -132,7 +133,14 @@ Deployed with **Docker Compose**.
 - **Historical window** limited to the **last 288 values**, which represents 24 hours
 - Public access through a dedicated account with the **`Viewer` role** (read-only)
 
-<!-- TODO: list the panels (e.g. temperature, humidity, pressure, wind...) -->
+**Key panels included:**
+* **Temperature:** Time-series graph showing values in °C.
+* **Relative Humidity:** Time-series graph showing percentage values (%).
+* **Atmospheric Pressure:** Time-series graph showing hPa.
+* **Wind Speed & Direction:** Real-time graphs for anemometer (m/s) and veleta (°).
+* **Precipitation:** Accumulated rainfall tracking (mm).
+* **Solar Radiation:** UV index / radiation tracking (W/m²).
+* **Latest Values Table:** Combined table view utilizing `Join by field` transformations to show all current sensor metrics at a glance.
 
 ### 🌐 Secure access: Cloudflare Tunnel
 
@@ -145,10 +153,9 @@ Cloudflare Tunnel maps the dashboard to a custom domain (`bsx.es`). Details in [
 Stations publish compact JSON messages. Short keys keep the payload small; the listener translates them into descriptive field names before storage.
 
 ```json
-{ "t": 0.0, "h": 0.0, "pn": 0.0, "v": 0.0, "a": 0.0, "pl": 0.0, "r": 0.0 }
+{ "t": 22.5, "h": 56.7, "pn": 1012, "v": 90, "a": 4.1, "pl": 0.0, "r": 510 }
 ```
 
-<!-- TODO: replace the example values with a real payload -->
 
 | Key | Stored as | Unit |
 | :--- | :--- | :--- |
@@ -164,26 +171,20 @@ Stations publish compact JSON messages. Short keys keep the payload small; the l
 
 ## 🗂️ Repository Structure
 
-<!-- TODO: adjust to the real layout of the repo -->
 
 ```text
 weather-station-iot/
 ├── README.md
-├── docker-compose.yml        # InfluxDB (and any other containerized service)
-├── mqtt_listener.py          # MQTT → InfluxDB processing service
-├── mqtt_listener.service     # systemd unit
-├── backup_influx.sh          # daily InfluxDB backup script
-├── grafana/                  # exported dashboards (JSON)
-├── docs/
-│   └── img/                  # screenshots and diagrams
-└── tests/                    # simulators and load-test scripts
+├── architecture.png          # System architecture and data flow diagram
+├── docker-compose.yml        # Mosquitto, InfluxDB and Grafana container orchestration
+├── mqtt_listener.py          # Python MQTT client and InfluxDB writer service
+├── mqtt_listener.service     # systemd unit for automatic background execution
+└── backup_influx.sh          # Daily InfluxDB automated backup script
 ```
 
 ---
 
 ## ⚙️ Configuration Examples
-
-> The snippets below are **illustrative**. Replace paths, users and names with the real ones from the repository.
 
 ### systemd unit (`mqtt_listener.service`)
 
@@ -195,9 +196,9 @@ Wants=network-online.target
 
 [Service]
 Type=simple
-User=TODO
-WorkingDirectory=/opt/weather-station-iot
-ExecStart=/usr/bin/python3 /opt/weather-station-iot/mqtt_listener.py
+User=teleco
+WorkingDirectory=/home/teleco/estacion-meteorologica
+ExecStart=/usr/bin/python3 /home/teleco/estacion-meteorologica/scripts/mqtt_listener.py
 Restart=always
 RestartSec=5
 
@@ -213,17 +214,17 @@ sudo systemctl enable --now mqtt_listener.service
 ### Daily backup (`cron`)
 
 ```cron
-# Every day at 03:00
-0 3 * * * /opt/weather-station-iot/backup_influx.sh >> /var/log/backup_influx.log 2>&1
+# Every day at 02:00
+0 2 * * * /home/teleco/estacion-meteorologica/scripts/backup_influx.sh >> /var/log/backup_influx.log 2>&1
 ```
 
 ### Grafana panel (Flux)
 
 ```flux
-from(bucket: "TODO_BUCKET")
+from(bucket: "estacion1")
   |> range(start: -24h)
-  |> filter(fn: (r) => r._measurement == "TODO_MEASUREMENT")
-  |> filter(fn: (r) => r._field == "temperature")
+  |> filter(fn: (r) => r._measurement == "mediciones")
+  |> filter(fn: (r) => r._field == "temperatura")
   |> limit(n: 288)
 ```
 
@@ -248,15 +249,12 @@ The system was validated in three steps:
 2. **Synthetic signal simulation:** **sine and cosine waves** published as sensor data, to verify mapping, storage and visualization against a known, predictable signal.
 3. **Load test:** **Telegraf** and a **simulator script** generated continuous traffic **equivalent to more than 6,000 concurrent weather stations**. The system handled it **without performance degradation**.
 
-<!-- TODO: add the numbers you can back up:
-| Metric                | Value |
-|-----------------------|-------|
-| Messages per second   | TODO  |
-| Message size          | TODO  |
-| CPU usage (Pi)        | TODO  |
-| RAM usage (Pi)        | TODO  |
-| Test duration         | TODO  |
--->
+| Metric | Value |
+| :--- | :--- |
+| **Messages per second** | 20 msg/s (equivalent to ~6,060 stations sending data every 5 minutes)[cite: 4] |
+| **CPU usage (Raspberry Pi)** | Controlled spikes from a 10% baseline up to 25-30%[cite: 4] |
+| **RAM usage (Raspberry Pi)** | Highly stable, never exceeding 16.5% of total RAM[cite: 4] |
+| **Test duration** | 5 minutes (structured in continuous traffic bursts and pauses)[cite: 4] |
 
 ---
 
