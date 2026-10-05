@@ -57,8 +57,9 @@ The design is **modular and decoupled**: each stage of the pipeline (transport, 
 - 📊 **Grafana v10** dashboards built on **Flux** queries, exposed read-only through a `Viewer` account
 - 🔐 **HTTPS remote access through Cloudflare Tunnel** and a custom domain (`bsx.es`), with no router ports opened
 
-<!-- TODO: add a screenshot of the main dashboard -->
-<!-- ![Dashboard](docs/img/dashboard.png) -->
+<p align="center">
+  <img src="docs/img/architecture.png" alt="Architecture Diagram" width="700">
+</p>
 
 ---
 
