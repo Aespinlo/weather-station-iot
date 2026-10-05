@@ -5,7 +5,7 @@
 
 <div align="center">
 
-# 🌦️ weather-station-iot
+# weather-station-iot
 
 ### Real-time meteorological data acquisition, storage and visualization
 
@@ -27,7 +27,7 @@
 
 ---
 
-## 📌 Table of Contents
+## Table of Contents
 
 1. [Project Overview](#-project-overview)
 2. [Architecture & Data Flow](#-architecture--data-flow)
@@ -43,7 +43,7 @@
 
 ---
 
-## 🔭 Project Overview
+## Project Overview
 
 `weather-station-iot` is an end-to-end system for **real-time meteorological data acquisition, storage and visualization**. It runs on a **Raspberry Pi 4B (4 GB RAM)** with **Ubuntu Server** as the central node.
 
@@ -51,11 +51,11 @@ The design is **modular and decoupled**: each stage of the pipeline (transport, 
 
 **Key features**
 
-- 📡 Lightweight publish/subscribe ingestion over **MQTT** (Eclipse Mosquitto)
-- 🐍 Python processing service with validation, key mapping and automatic reconnection, supervised by **systemd**
-- 🗄️ **InfluxDB v2.7** time-series storage with **no retention limit** and **automated daily backups**
-- 📊 **Grafana v10** dashboards built on **Flux** queries, exposed read-only through a `Viewer` account
-- 🔐 **HTTPS remote access through Cloudflare Tunnel** and a custom domain (`bsx.es`), with no router ports opened
+- Lightweight publish/subscribe ingestion over **MQTT** (Eclipse Mosquitto)
+- Python processing service with validation, key mapping and automatic reconnection, supervised by **systemd**
+- **InfluxDB v2.7** time-series storage with **no retention limit** and **automated daily backups**
+- **Grafana v10** dashboards built on **Flux** queries, exposed read-only through a `Viewer` account
+- **HTTPS remote access through Cloudflare Tunnel** and a custom domain (`bsx.es`), with no router ports opened
 
 <p align="center">
   <img src="architecture.png" alt="Architecture Diagram" width="700">
@@ -63,11 +63,11 @@ The design is **modular and decoupled**: each stage of the pipeline (transport, 
 
 ---
 
-## 🧭 Architecture & Data Flow
+## Architecture & Data Flow
 
 ```mermaid
 flowchart LR
-    WS["🌦️ External<br/>Weather Station"] -- "MQTT publish<br/>JSON payload" --> MB
+    WS["External<br/>Weather Station"] -- "MQTT publish<br/>JSON payload" --> MB
 
     subgraph RPI["Raspberry Pi 4B · Ubuntu Server"]
         direction LR
@@ -79,8 +79,8 @@ flowchart LR
         GF --> CF
     end
 
-    CF -- "HTTPS · outbound-only tunnel" --> CFE["☁️ Cloudflare Edge<br/>bsx.es"]
-    CFE --> U["👤 Viewer<br/>(browser)"]
+    CF -- "HTTPS · outbound-only tunnel" --> CFE["Cloudflare Edge<br/>bsx.es"]
+    CFE --> U["Viewer<br/>(browser)"]
 ```
 
 **Data flow, step by step**
@@ -96,37 +96,37 @@ flowchart LR
 
 ---
 
-## 🧩 Core Components
+## Core Components
 
-### 🖥️ Hardware core: Raspberry Pi 4B
+### Hardware core: Raspberry Pi 4B
 
 Central node of the system (4 GB RAM, Ubuntu Server). It hosts the broker, the processing service, the database, the dashboards and the tunnel client.
 
-### 📨 MQTT broker: Eclipse Mosquitto
+### MQTT broker: Eclipse Mosquitto
 
 Lightweight publish/subscribe messaging. It handles incoming **JSON payloads with abbreviated sensor metrics** (`t`, `h`, `pn`, `v`, `a`, `pl`, `r`), which keeps messages small. See [Payload Format](#-payload-format).
 
 * **Topic structure:** Messages are published under `/teleco/#` (specifically tested with `/teleco/estacion1`), allowing a scalable, hierarchical routing model for multiple stations.
 * **Authentication:** Basic username and password validation configured on the broker to restrict unauthorized publishers.****
 
-### 🐍 Processing service: `mqtt_listener.py`
+### Processing service: `mqtt_listener.py`
 
 Python service built with **`paho-mqtt`** and **`influxdb-client`**. It is the bridge between the broker and the database.
 
-- ✅ **Input validation** of every incoming message
-- 🔄 **JSON decoding** and mapping of short keys to descriptive field names
-- 🕒 **UTC timestamp generation** for every point
-- ♻️ **Infinite reconnection loop** to survive broker or database outages
-- 🛡️ **Managed by `systemd`**: fault tolerance, automatic restart on failure and start on boot
+- **Input validation** of every incoming message
+- **JSON decoding** and mapping of short keys to descriptive field names
+- **UTC timestamp generation** for every point
+- **Infinite reconnection loop** to survive broker or database outages
+- **Managed by `systemd`**: fault tolerance, automatic restart on failure and start on boot
 
-### 🗄️ Time-series database: InfluxDB v2.7
+### Time-series database: InfluxDB v2.7
 
 Deployed with **Docker Compose**.
 
-- ♾️ **Infinite retention policy**: no time limit, so the full history is kept
-- 💾 **Automated daily backups** with a shell script (`backup_influx.sh`) scheduled through `cron`
+- **Infinite retention policy**: no time limit, so the full history is kept
+- **Automated daily backups** with a shell script (`backup_influx.sh`) scheduled through `cron`
 
-### 📊 Visualization: Grafana v10
+### Visualization: Grafana v10
 
 - Custom dashboards using **Flux queries**
 - **Advanced transformations**, such as `Join by field` to merge the time series of several sensors into a **single real-time table**
@@ -142,13 +142,13 @@ Deployed with **Docker Compose**.
 * **Solar Radiation:** UV index / radiation tracking (W/m²).
 * **Latest Values Table:** Combined table view utilizing `Join by field` transformations to show all current sensor metrics at a glance.
 
-### 🌐 Secure access: Cloudflare Tunnel
+### Secure access: Cloudflare Tunnel
 
 Cloudflare Tunnel maps the dashboard to a custom domain (`bsx.es`). Details in [Secure Remote Access](#-secure-remote-access).
 
 ---
 
-## 📦 Payload Format
+## Payload Format
 
 Stations publish compact JSON messages. Short keys keep the payload small; the listener translates them into descriptive field names before storage.
 
@@ -169,7 +169,7 @@ Stations publish compact JSON messages. Short keys keep the payload small; the l
 
 ---
 
-## 🗂️ Repository Structure
+## Repository Structure
 
 
 ```text
@@ -184,7 +184,7 @@ weather-station-iot/
 
 ---
 
-## ⚙️ Configuration Examples
+## Configuration Examples
 
 ### systemd unit (`mqtt_listener.service`)
 
@@ -230,18 +230,18 @@ from(bucket: "estacion1")
 
 ---
 
-## 🔐 Secure Remote Access
+## Secure Remote Access
 
 The system is published through a **Cloudflare Tunnel** mapped to the custom domain **`bsx.es`**.
 
-- 🚫 **No open router ports and no port forwarding.** `cloudflared` creates an **outbound-only** connection to Cloudflare.
-- 🏫 **Works behind restrictive networks.** The project had to deal with the university's NAT and firewall constraints, which made classic port forwarding impractical.
-- 🔒 **HTTPS** to the end user, served through Cloudflare.
-- 👁️ **Least privilege:** public visitors use a dedicated Grafana account with the `Viewer` role (no editing or administration).
+- **No open router ports and no port forwarding.** `cloudflared` creates an **outbound-only** connection to Cloudflare.
+- **Works behind restrictive networks.** The project had to deal with the university's NAT and firewall constraints, which made classic port forwarding impractical.
+- **HTTPS** to the end user, served through Cloudflare.
+- **Least privilege:** public visitors use a dedicated Grafana account with the `Viewer` role (no editing or administration).
 
 ---
 
-## ✅ Validation & Load Testing
+## Validation & Load Testing
 
 The system was validated in three steps:
 
@@ -276,7 +276,7 @@ The system was validated in three steps:
 ---
 
 
-## 🚀 Possible Improvements
+## Possible Improvements
 
 Ideas to take the system further:
 
@@ -288,7 +288,7 @@ Ideas to take the system further:
 
 ---
 
-## 👤 Author
+## Author
 
 **Andrés Espinel López**
 Telecommunications Engineer (Telematics) · University of Valladolid
